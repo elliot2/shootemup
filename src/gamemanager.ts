@@ -24,6 +24,7 @@ export class GameManager extends Phaser.Scene {
   private waveText: Phaser.GameObjects.Text | undefined = undefined;
   private wave: number = 1;
   private backgroundMusic: Phaser.Sound.BaseSound | undefined = undefined;
+  gameOverLogo: Phaser.GameObjects.Image | undefined = undefined;
 
   constructor() {
     super("GameManager");
@@ -31,6 +32,7 @@ export class GameManager extends Phaser.Scene {
 
   preload() {
     // preload assets here
+    this.load.image("gameOverLogo", "assets/logo.png");
     this.load.image("player", "assets/player.png");
     this.load.image("enemy", "assets/enemy.png");
     this.load.image("bullet", "assets/bullet.png");
@@ -103,6 +105,12 @@ export class GameManager extends Phaser.Scene {
       duration: 1000,
       ease: "Power1",
     });
+    this.tweens.add({
+      targets: this.gameOverLogo,
+      alpha: 0.5,
+      duration: 1000,
+      ease: "Power1",
+    });
   }
 
   create() {
@@ -142,6 +150,10 @@ export class GameManager extends Phaser.Scene {
     this.waveText.depth = 100;
     this.waveText.setAlpha(0);
 
+    // logo
+    this.gameOverLogo = this.add.image(900, 300, "gameOverLogo");
+    this.gameOverLogo.alpha = 0;
+
     // Game Over text
     this.gameOverText = this.add.text(
       640,
@@ -162,6 +174,12 @@ export class GameManager extends Phaser.Scene {
     this.tweens.add({
       targets: this.gameOverText,
       alpha: 1,
+      duration: 1000,
+      ease: "Power1",
+    });
+    this.tweens.add({
+      targets: this.gameOverLogo,
+      alpha: 0.5,
       duration: 1000,
       ease: "Power1",
     });
@@ -211,6 +229,12 @@ export class GameManager extends Phaser.Scene {
         this.startPressed = true;
         this.tweens.add({
           targets: this.gameOverText,
+          alpha: 0,
+          duration: 1000,
+          ease: "Power1",
+        });
+        this.tweens.add({
+          targets: this.gameOverLogo,
           alpha: 0,
           duration: 1000,
           ease: "Power1",
