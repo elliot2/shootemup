@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "es6",
+    "strict": true,
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "sourceMap": true,
+    "typeRoots": ["node_modules/@types", "node_module/phaser/types"],
+    "types": ["Phaser"]
+  },
+  "include": ["src/**/*"]
+}
