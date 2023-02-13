@@ -108,6 +108,7 @@ export class GameManager extends Phaser.Scene {
     this.tweens.add({
       targets: this.gameOverLogo,
       alpha: 0.5,
+      scale: 1,
       duration: 1000,
       ease: "Power1",
     });
@@ -153,6 +154,7 @@ export class GameManager extends Phaser.Scene {
     // logo
     this.gameOverLogo = this.add.image(900, 300, "gameOverLogo");
     this.gameOverLogo.alpha = 0;
+    this.gameOverLogo.scale = 0.1;
 
     // Game Over text
     this.gameOverText = this.add.text(
@@ -180,6 +182,7 @@ export class GameManager extends Phaser.Scene {
     this.tweens.add({
       targets: this.gameOverLogo,
       alpha: 0.5,
+      scale: 1,
       duration: 1000,
       ease: "Power1",
     });
@@ -236,6 +239,7 @@ export class GameManager extends Phaser.Scene {
         this.tweens.add({
           targets: this.gameOverLogo,
           alpha: 0,
+          scale: 0.5,
           duration: 1000,
           ease: "Power1",
         });

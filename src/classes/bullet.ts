@@ -9,7 +9,6 @@ export class Bullet extends Phaser.GameObjects.Sprite {
 
     // Set the bullet's movement speed
     this.speed = 100;
-
     this.name = "bullet";
 
     // Add the bullet's sprite to the game world
