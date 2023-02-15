@@ -3,11 +3,16 @@ import { Bullet } from "./classes/bullet";
 import { Enemy } from "./classes/enemy";
 import { EnemyBullet } from "./classes/enemybullet";
 import { Explosion } from "./classes/explosition";
+import { Mothership } from "./classes/mothership";
+import { Phantom } from "./classes/phantom";
 import { Player } from "./classes/player";
 import { Starfield } from "./classes/starfield";
 
 export class GameManager extends Phaser.Scene {
   private player: Player | undefined = undefined;
+
+  public mothership: Mothership | undefined = undefined;
+
   private spawningWave: boolean = false;
   private score: number = 0;
   private scoreText: Phaser.GameObjects.Text | undefined = undefined;
@@ -35,6 +40,7 @@ export class GameManager extends Phaser.Scene {
     this.load.image("gameOverLogo", "assets/logo.png");
     this.load.image("player", "assets/player.png");
     this.load.image("enemy", "assets/enemy.png");
+    this.load.image("mothership", "assets/mothership.png");
     this.load.image("bullet", "assets/bullet.png");
     this.load.spritesheet("explosion_animation", "assets/explosion.png", {
       frameWidth: 192,
@@ -44,17 +50,11 @@ export class GameManager extends Phaser.Scene {
     this.load.audio("bullet-fired", "assets/shoot.wav");
     this.load.audio("explosion-sound", "assets/explosion.wav");
     this.load.audio("bgm", "assets/loop.mp3");
+    this.load.audio("mothership-loop", "assets/mothership.mp3");
     this.load.image("starfield", "assets/starfield.png");
   }
 
   drawLives() {
-    for (let i = 0; i < this.lives; i++) {
-      let life = this.add.image(50 + i * 48, 48, "player").setScale(0.08);
-      this.livesImages.push(life);
-    }
-  }
-
-  startScene() {
     // reset lives
     let life = this.livesImages.pop();
     do {
@@ -63,6 +63,14 @@ export class GameManager extends Phaser.Scene {
         life = this.livesImages.pop();
       }
     } while (life);
+
+    for (let i = 0; i < this.lives; i++) {
+      let life = this.add.image(50 + i * 48, 48, "player").setScale(0.08);
+      this.livesImages.push(life);
+    }
+  }
+
+  startScene() {
     this.lives = 3;
     this.drawLives();
 
@@ -215,8 +223,8 @@ export class GameManager extends Phaser.Scene {
       ease: "Power1",
     });
 
-    for (let i = 0; i < this.wave; i++) {
-      new Enemy(
+    for (let i = 0; i < Math.min(this.wave, 10); i++) {
+      new Phantom(
         this,
         i * 100 + 50,
         -1000,
@@ -253,14 +261,20 @@ export class GameManager extends Phaser.Scene {
     // Update score
     if (this.scoreText) this.scoreText.setText(`Score: ${this.score}`);
 
-    // Don't do anything.
+    // Don't do anything else.
     if (this.isGameOver) {
       return;
     }
 
+    // spawn mothership
+    if (Math.random() * 1000 < 1 && !this.mothership && this.wave > 10) {
+      // spawn mothership
+      this.mothership = new Mothership(this, -100, 70);
+    }
+
     if (!this.player?.invincible)
       this.children.list
-        .filter((value) => value.name == "enemyBullet")
+        .filter((value) => value.name == "enemyBullet" || value.name == "enemy")
         .forEach((enemyBullet) => {
           if (
             this.player &&
@@ -310,11 +324,15 @@ export class GameManager extends Phaser.Scene {
                 (enemy as Enemy).getBounds()
               )
             ) {
+              this.score += (enemy as Enemy).pointReward; // increase the score
+              this.lives += (enemy as Enemy).livesReward; // increase lives
+              if ((enemy as Enemy).livesReward > 0) {
+                this.drawLives();
+              }
               enemy.destroy();
               bullet.destroy();
               // create explosion
               new Explosion(this, (enemy as Enemy).x, (enemy as Enemy).y);
-              this.score += 5; // increase the score
             }
           });
       });
