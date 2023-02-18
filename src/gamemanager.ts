@@ -9,7 +9,7 @@ import { Player } from "./classes/player";
 import { Raptor } from "./classes/raptor";
 import { Starfield } from "./classes/starfield";
 
-const BUILD_INFO: string = `v1.1`;
+const BUILD_INFO: string = `v1.11`;
 
 export class GameManager extends Phaser.Scene {
   public player: Player | undefined = undefined;
