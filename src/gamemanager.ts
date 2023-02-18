@@ -249,13 +249,13 @@ export class GameManager extends Phaser.Scene {
       );
     }
     if (this.wave > 15) {
-      for (let i = 0; i < Math.min(this.wave / 10, 10); i++) {
+      for (let i = 0; i < Math.min(this.wave / 15, 10); i++) {
         new Raptor(
           this,
           i * 100 + 50,
           -1000,
           90 + this.wave * 2,
-          1100 - this.wave * 40
+          1100 - this.wave * 20
         );
       }
     }

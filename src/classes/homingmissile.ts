@@ -8,7 +8,7 @@ export class HomingMissile extends Phaser.GameObjects.Sprite {
     super(scene, x, y, "missile"); // 'bullet' is the key of the bullet sprite in the game's asset cache
 
     // Set the bullet's movement speed
-    this.speed = 100;
+    this.speed = 50;
 
     if (!!(scene as GameManager).player) {
       // Calculate the angle between the enemy and the player
