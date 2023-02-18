@@ -1,4 +1,5 @@
 import "phaser";
+import { API, GameStatusType } from "./classes/api";
 import { Bullet } from "./classes/bullet";
 import { Enemy } from "./classes/enemy";
 import { EnemyBullet } from "./classes/enemybullet";
@@ -9,7 +10,7 @@ import { Player } from "./classes/player";
 import { Raptor } from "./classes/raptor";
 import { Starfield } from "./classes/starfield";
 
-const BUILD_INFO: string = `v1.11`;
+const BUILD_INFO: string = `v1.12`;
 
 export class GameManager extends Phaser.Scene {
   public player: Player | undefined = undefined;
@@ -34,6 +35,14 @@ export class GameManager extends Phaser.Scene {
   private backgroundMusic: Phaser.Sound.BaseSound | undefined = undefined;
   private gameOverLogo: Phaser.GameObjects.Image | undefined = undefined;
   private versionText: Phaser.GameObjects.Text | undefined = undefined;
+  private transferring: boolean = true; // set to true so it does not transfer until the first game.
+
+  // game state
+  public gameStatus: GameStatusType = {
+    wave: 0,
+    score: 0,
+    lastUpdate: 0,
+  };
 
   constructor() {
     super("GameManager");
@@ -77,6 +86,7 @@ export class GameManager extends Phaser.Scene {
   }
 
   startScene() {
+    this.transferring = false;
     this.lives = 3;
     this.drawLives();
 
@@ -84,6 +94,12 @@ export class GameManager extends Phaser.Scene {
     this.startPressed = false;
     this.score = 0;
     this.player = new Player(this, 640, this.game.canvas.height - 55);
+
+    // call game init
+    API.gameInit().then((game) => (this.gameStatus.uuid = game.uuid));
+    this.gameStatus.score = 0;
+    this.gameStatus.wave = 0;
+    this.gameStatus.name = ""; // Clear name so scores don't all get replaced on each update.
 
     // wave 1
     this.wave = 1;
@@ -129,6 +145,9 @@ export class GameManager extends Phaser.Scene {
   }
 
   create() {
+    // Change game scene size
+    this.game.scale.setGameSize(1280, 720);
+
     this.startKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.ENTER
     );
@@ -227,8 +246,11 @@ export class GameManager extends Phaser.Scene {
       this.input.setDefaultCursor("none");
     });
 
-    this.backgroundMusic = this.sound.add("bgm");
-    this.backgroundMusic.play({ loop: true, volume: 0.3 });
+    // Prevent it from being created each time the scene is switched.
+    if (!this.backgroundMusic) {
+      this.backgroundMusic = this.sound.add("bgm");
+      this.backgroundMusic.play({ loop: true, volume: 0.3 });
+    }
   }
 
   spawnWave() {
@@ -261,8 +283,23 @@ export class GameManager extends Phaser.Scene {
     }
   }
 
+  initialsScene() {
+    if (this.transferring) return;
+    this.transferring = true;
+    this.scene.start("InitialsScene");
+  }
+
   update() {
     if (this.isGameOver) {
+      this.gameStatus.score = this.score;
+
+      // If score is in top 5 go here, condition not implemented.
+      if (!this.transferring) {
+        setTimeout(() => {
+          this.initialsScene();
+        }, 2000);
+      }
+
       if (this.startKey?.isDown && !this.startPressed) {
         this.startPressed = true;
         this.tweens.add({
@@ -372,6 +409,12 @@ export class GameManager extends Phaser.Scene {
         // Update wave
         this.spawningWave = true;
         this.wave++;
+
+        // Post API update
+        this.gameStatus.score = this.score;
+        this.gameStatus.wave = this.wave;
+        API.updateStatus(this.gameStatus);
+
         if (this.waveText) this.waveText.setText(`Wave ${this.wave}`);
         this.tweens.add({
           targets: this.waveText,

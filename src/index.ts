@@ -1,5 +1,6 @@
 import * as Phaser from "phaser";
 import { GameManager } from "./gamemanager";
+import { InitialsScene } from "./classes/initialscene";
 
 var game: any = null;
 const config = {
@@ -8,7 +9,7 @@ const config = {
   backgroundColor: "#000000",
   type: Phaser.AUTO,
   parent: "game",
-  scene: [GameManager],
+  scene: [GameManager, InitialsScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
