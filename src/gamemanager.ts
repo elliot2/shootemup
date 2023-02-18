@@ -6,10 +6,11 @@ import { Explosion } from "./classes/explosition";
 import { Mothership } from "./classes/mothership";
 import { Phantom } from "./classes/phantom";
 import { Player } from "./classes/player";
+import { Raptor } from "./classes/raptor";
 import { Starfield } from "./classes/starfield";
 
 export class GameManager extends Phaser.Scene {
-  private player: Player | undefined = undefined;
+  public player: Player | undefined = undefined;
 
   public mothership: Mothership | undefined = undefined;
 
@@ -40,8 +41,10 @@ export class GameManager extends Phaser.Scene {
     this.load.image("gameOverLogo", "assets/logo.png");
     this.load.image("player", "assets/player.png");
     this.load.image("enemy", "assets/enemy.png");
+    this.load.image("enemy2", "assets/enemy2.png");
     this.load.image("mothership", "assets/mothership.png");
     this.load.image("bullet", "assets/bullet.png");
+    this.load.image("missile", "assets/missile.png");
     this.load.spritesheet("explosion_animation", "assets/explosion.png", {
       frameWidth: 192,
       frameHeight: 192,
@@ -231,6 +234,17 @@ export class GameManager extends Phaser.Scene {
         90 + this.wave * 2,
         1100 - this.wave * 40
       );
+    }
+    if (this.wave > 15) {
+      for (let i = 0; i < Math.min(this.wave / 3, 3); i++) {
+        new Raptor(
+          this,
+          i * 100 + 50,
+          -1000,
+          90 + this.wave * 2,
+          1100 - this.wave * 40
+        );
+      }
     }
   }
 
