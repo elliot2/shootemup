@@ -9,6 +9,8 @@ import { Player } from "./classes/player";
 import { Raptor } from "./classes/raptor";
 import { Starfield } from "./classes/starfield";
 
+const BUILD_INFO: string = `v1.1`;
+
 export class GameManager extends Phaser.Scene {
   public player: Player | undefined = undefined;
 
@@ -30,7 +32,8 @@ export class GameManager extends Phaser.Scene {
   private waveText: Phaser.GameObjects.Text | undefined = undefined;
   private wave: number = 1;
   private backgroundMusic: Phaser.Sound.BaseSound | undefined = undefined;
-  gameOverLogo: Phaser.GameObjects.Image | undefined = undefined;
+  private gameOverLogo: Phaser.GameObjects.Image | undefined = undefined;
+  private versionText: Phaser.GameObjects.Text | undefined = undefined;
 
   constructor() {
     super("GameManager");
@@ -146,6 +149,16 @@ export class GameManager extends Phaser.Scene {
     this.scoreText.setOrigin(0.5, 0);
     this.scoreText.depth = 100;
 
+    // Version
+    this.versionText = this.add.text(1280, 0, BUILD_INFO, {
+      fontFamily: "Monospace",
+      fontSize: "8px",
+      color: "#ffffff",
+      align: "center",
+    });
+    this.versionText.setOrigin(1, 0);
+    this.versionText.depth = 100;
+
     // Wave text
     this.waveText = this.add.text(
       640,
@@ -236,7 +249,7 @@ export class GameManager extends Phaser.Scene {
       );
     }
     if (this.wave > 15) {
-      for (let i = 0; i < Math.min(this.wave / 3, 3); i++) {
+      for (let i = 0; i < Math.min(this.wave / 10, 10); i++) {
         new Raptor(
           this,
           i * 100 + 50,
