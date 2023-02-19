@@ -10,7 +10,7 @@ import { Player } from "./classes/player";
 import { Raptor } from "./classes/raptor";
 import { Starfield } from "./classes/starfield";
 
-const BUILD_INFO: string = `v1.12`;
+const BUILD_INFO: string = `v1.13`;
 
 export class GameManager extends Phaser.Scene {
   public player: Player | undefined = undefined;
@@ -295,9 +295,7 @@ export class GameManager extends Phaser.Scene {
 
       // If score is in top 5 go here, condition not implemented.
       if (!this.transferring) {
-        setTimeout(() => {
-          this.initialsScene();
-        }, 2000);
+        this.initialsScene();
       }
 
       if (this.startKey?.isDown && !this.startPressed) {
