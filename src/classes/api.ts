@@ -7,7 +7,8 @@ export interface GameStatusType {
 }
 
 export class API {
-  private static readonly baseUrl = "http://localhost:9595";
+  private static readonly baseUrl =
+    "http://" + window.location.hostname + ":9595";
 
   static async gameInit(): Promise<{ uuid: string }> {
     const response = await fetch(`${API.baseUrl}/gameInit`, {
