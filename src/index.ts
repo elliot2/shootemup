@@ -1,28 +1,20 @@
 import * as Phaser from "phaser";
 import { GameManager } from "./gamemanager";
 import { InitialsScene } from "./classes/initialscene";
+import TubePostFX from "./classes/tubePostFX";
 
-var game: any = null;
+var game: Game | undefined = undefined;
 const config = {
   width: 1280,
   height: 720,
   backgroundColor: "#000000",
-  type: Phaser.AUTO,
+  type: Phaser.WEBGL,
   parent: "game",
   scene: [GameManager, InitialsScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     orientation: Phaser.Scale.Orientation.LANDSCAPE,
-  },
-  render: {
-    pixelArt: true,
-    antialias: false,
-    roundPixels: true,
-  },
-  debug: {
-    marker: true,
-    add: true,
   },
   physics: {
     default: "arcade",

@@ -9,6 +9,7 @@ import { Phantom } from "./classes/phantom";
 import { Player } from "./classes/player";
 import { Raptor } from "./classes/raptor";
 import { Starfield } from "./classes/starfield";
+import TubePostFX from "./classes/tubePostFX";
 
 const BUILD_INFO: string = `v1.13`;
 
@@ -43,6 +44,7 @@ export class GameManager extends Phaser.Scene {
     score: 0,
     lastUpdate: 0,
   };
+  customPipeline: Phaser.Renderer.WebGL.PipelineManager | undefined;
 
   constructor() {
     super("GameManager");
@@ -147,6 +149,24 @@ export class GameManager extends Phaser.Scene {
   create() {
     // Change game scene size
     this.game.scale.setGameSize(1280, 720);
+
+    const renderer = this.game.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
+    this.customPipeline = renderer.pipelines.addPostPipeline(
+      "TubePostFX",
+      TubePostFX
+    );
+    // renderer.pipelines.set(this.customPipeline);
+
+    this.cameras.main.setPostPipeline("TubePostFX");
+
+    //let cam = this.cameras.main;
+    //cam.setPostPipeline(TubePostFX);
+
+    // this.customPipeline.set2f(
+    //   "resolution",
+    //   this.scale.width,
+    //   this.scale.height
+    // );
 
     this.startKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.ENTER
