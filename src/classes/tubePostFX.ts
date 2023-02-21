@@ -15,10 +15,11 @@ export default class TubePostFX extends Phaser.Renderer.WebGL.Pipelines
       uniform vec2 uResolution;
       
       #define CURVE 1.7
+      #define SCANLINE_DENSITY 100.0
       
       vec2 CurvedSurface(vec2 uv, float r)
       {
-          return r * uv/sqrt(r * r - dot(uv, uv));
+          return r * uv / sqrt(r * r - dot(uv, uv));
       }
       
       vec2 crtCurve(vec2 uv, float r)
@@ -31,10 +32,6 @@ export default class TubePostFX extends Phaser.Renderer.WebGL.Pipelines
           uv = CurvedSurface(uv, r);
           uv += vec2(0.5, 0.5);
       
-          if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-              return vec2(-1.0, -1.0);
-          }
-      
           return uv;
       }
       
@@ -42,28 +39,24 @@ export default class TubePostFX extends Phaser.Renderer.WebGL.Pipelines
       {
           vec2 uv = gl_FragCoord.xy / uResolution.xy;
           uv = crtCurve(uv, 1.0);
-      
-          if (uv.x < 0.0) {
-              gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-              return;
-          }
-      
-          if (uv.y < 0.0) {
-              gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-              return;
-          }
-      
-          if (uv.x > 1.0) {
-              gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-              return;
-          }
-      
-          if (uv.y > 1.0) {
+          
+          if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
               gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
               return;
           }
       
           vec4 color = texture2D(uMainSampler, uv);
+
+          // Increase contrast
+          color.rgb = (color.rgb - 0.5) * 1.6 + 0.8;
+      
+          // Add scanlines
+          float scanline = floor(gl_FragCoord.y * SCANLINE_DENSITY / uResolution.y) / SCANLINE_DENSITY;
+          if (mod(floor(gl_FragCoord.y), 2.0) == 0.0) {
+              color.rgb *= 1.0 - scanline;
+          } else {
+              color.rgb *= scanline;
+          }
       
           gl_FragColor = color;
       }
