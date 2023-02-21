@@ -98,7 +98,7 @@ export class InitialsScene extends Phaser.Scene {
       .bitmapText(560, 310, "arcade", name)
       .setTint(0xff0000);
 
-    this.input.keyboard.on("keyup", (event: any) => {
+    this.input.keyboard.on("keydown", (event: any) => {
       if (event.keyCode === 37) {
         //  left
         if (cursor.x > 0) {

@@ -11,6 +11,7 @@ export default class TubePostFX extends Phaser.Renderer.WebGL.Pipelines
       precision mediump float;
 
       uniform sampler2D uMainSampler;
+      uniform sampler2D uFrameSampler;
       uniform float uTime;
       uniform vec2 uResolution;
       
@@ -40,15 +41,14 @@ export default class TubePostFX extends Phaser.Renderer.WebGL.Pipelines
           vec2 uv = gl_FragCoord.xy / uResolution.xy;
           uv = crtCurve(uv, 1.0);
           
-          if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-              gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-              return;
-          }
-      
           vec4 color = texture2D(uMainSampler, uv);
 
           // Increase contrast
-          color.rgb = (color.rgb - 0.5) * 1.6 + 0.8;
+          color.rgb = (color.rgb - 0.5) * 1.8 + 0.9;
+
+          if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+            color = vec4(0.0, 0.0, 0.0, 1.0);
+        }
       
           // Add scanlines
           float scanline = floor(gl_FragCoord.y * SCANLINE_DENSITY / uResolution.y) / SCANLINE_DENSITY;
@@ -58,8 +58,12 @@ export default class TubePostFX extends Phaser.Renderer.WebGL.Pipelines
               color.rgb *= scanline;
           }
       
+          vec4 frame = texture2D(uFrameSampler, vec2(gl_FragCoord.x / uResolution.x, 1.0 - gl_FragCoord.y / uResolution.y));
+          color = mix(color * 1.75, frame * 0.25, frame.a);
+      
           gl_FragColor = color;
       }
+      
       
       `,
     });
@@ -68,7 +72,12 @@ export default class TubePostFX extends Phaser.Renderer.WebGL.Pipelines
   onPreRender() {
     this.set2f("uResolution", this.renderer.width, this.renderer.height);
     this.set1f("uTime", this.game.loop.time * 0.01);
-    //this.set1f("ScaledScanLinePeriod", 0.01);
-    //this.set1f("ScaledGaussianSigma", 0.01);
+
+    this.set1i(
+      "uFrameSampler",
+      this.renderer.setTextureSource(
+        this.game.textures.get("frameTexture").source[0]
+      )
+    );
   }
 }

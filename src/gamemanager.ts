@@ -69,6 +69,7 @@ export class GameManager extends Phaser.Scene {
     this.load.audio("bgm", "assets/loop.mp3");
     this.load.audio("mothership-loop", "assets/mothership.mp3");
     this.load.image("starfield", "assets/starfield.png");
+    this.load.image("frameTexture", "assets/crt.png");
   }
 
   drawLives() {
