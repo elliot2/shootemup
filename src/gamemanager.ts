@@ -11,7 +11,7 @@ import { Raptor } from "./classes/raptor";
 import { Starfield } from "./classes/starfield";
 import TubePostFX from "./classes/tubePostFX";
 
-const BUILD_INFO: string = `v1.13`;
+const BUILD_INFO: string = `v1.14`;
 
 export class GameManager extends Phaser.Scene {
   public player: Player | undefined = undefined;
@@ -192,7 +192,7 @@ export class GameManager extends Phaser.Scene {
     // Version
     this.versionText = this.add.text(1280, 0, BUILD_INFO, {
       fontFamily: "Monospace",
-      fontSize: "8px",
+      fontSize: "12px",
       color: "#ffffff",
       align: "center",
     });
