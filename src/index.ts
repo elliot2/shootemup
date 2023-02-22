@@ -2,6 +2,7 @@ import * as Phaser from "phaser";
 import { GameManager } from "./gamemanager";
 import { InitialsScene } from "./classes/initialscene";
 import TubePostFX from "./classes/tubePostFX";
+import { HighScores } from "./classes/highscores";
 
 var game: Game | undefined = undefined;
 const config = {
@@ -10,7 +11,7 @@ const config = {
   backgroundColor: "#000000",
   type: Phaser.WEBGL,
   parent: "game",
-  scene: [GameManager, InitialsScene],
+  scene: [GameManager, InitialsScene, HighScores],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

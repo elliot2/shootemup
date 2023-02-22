@@ -16,7 +16,7 @@ export default class TubePostFX extends Phaser.Renderer.WebGL.Pipelines
       uniform vec2 uResolution;
       
       #define CURVE 1.4
-      #define SCANLINE_DENSITY 200.0
+      #define SCANLINE_DENSITY 400.0
       
       vec2 CurvedSurface(vec2 uv, float r)
       {

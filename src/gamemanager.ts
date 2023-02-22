@@ -11,7 +11,7 @@ import { Raptor } from "./classes/raptor";
 import { Starfield } from "./classes/starfield";
 import TubePostFX from "./classes/tubePostFX";
 
-const BUILD_INFO: string = `v1.14`;
+const BUILD_INFO: string = `v1.15`;
 
 export class GameManager extends Phaser.Scene {
   public player: Player | undefined = undefined;
@@ -44,7 +44,15 @@ export class GameManager extends Phaser.Scene {
     score: 0,
     lastUpdate: 0,
   };
-  customPipeline: Phaser.Renderer.WebGL.PipelineManager | undefined;
+  private customPipeline: Phaser.Renderer.WebGL.PipelineManager | undefined;
+  private highscoresTimeout: number | undefined;
+  private transferringHighScore: boolean = false;
+  private map: Phaser.Tilemaps.Tilemap | undefined;
+  private tileset: Phaser.Tilemaps.Tileset | undefined;
+  public layer: Phaser.Tilemaps.TilemapLayer | undefined;
+  // public collisionsLayer: Phaser.Tilemaps.TilemapLayer | undefined;
+  private debugGraphics: Phaser.GameObjects.Graphics | undefined;
+  private mapScrollY: number = 0;
 
   constructor() {
     super("GameManager");
@@ -70,6 +78,8 @@ export class GameManager extends Phaser.Scene {
     this.load.audio("mothership-loop", "assets/mothership.mp3");
     this.load.image("starfield", "assets/starfield.png");
     this.load.image("frameTexture", "assets/crt.png");
+    this.load.image("tiles", "assets/tiles.png");
+    this.load.tilemapTiledJSON("map", "assets/map1.json");
   }
 
   drawLives() {
@@ -89,6 +99,12 @@ export class GameManager extends Phaser.Scene {
   }
 
   startScene() {
+    if (this.highscoresTimeout) {
+      clearTimeout(this.highscoresTimeout);
+      this.highscoresTimeout = undefined;
+    }
+    this.transferringHighScore = false;
+
     this.transferring = false;
     this.lives = 3;
     this.drawLives();
@@ -151,30 +167,47 @@ export class GameManager extends Phaser.Scene {
     // Change game scene size
     this.game.scale.setGameSize(1280, 720);
 
+    this.transferringHighScore = false;
+
+    // Post fx
     const renderer = this.game.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
     this.customPipeline = renderer.pipelines.addPostPipeline(
       "TubePostFX",
       TubePostFX
     );
-    // renderer.pipelines.set(this.customPipeline);
-
     this.cameras.main.setPostPipeline("TubePostFX");
 
-    //let cam = this.cameras.main;
-    //cam.setPostPipeline(TubePostFX);
-
-    // this.customPipeline.set2f(
-    //   "resolution",
-    //   this.scale.width,
-    //   this.scale.height
-    // );
-
+    // key input
     this.startKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.ENTER
     );
 
-    new Starfield(this, 0, 0, 10);
-    new Starfield(this, 0, -this.game.canvas.height, 10);
+    // star field
+    new Starfield(this, 0, 0, 5);
+    new Starfield(this, 0, -this.game.canvas.height, 5);
+
+    // map
+    this.map = this.make.tilemap({ key: "map", tileWidth: 64, tileHeight: 64 });
+    this.tileset = this.map.addTilesetImage("tiles1", "tiles");
+    this.layer = this.map.createLayer(0, this.tileset, 0, 0);
+
+    // Tiled editor tile ID + 1
+    this.layer.setCollisionBetween(1, 3, true);
+    this.layer.setCollisionBetween(6, 8, true);
+    this.layer.setCollisionBetween(11, 13, true);
+    this.layer.setCollisionBetween(18, 18, true);
+    this.layer.setCollisionBetween(21, 23, true);
+
+    this.debugGraphics = this.add.graphics();
+    // this.physics.world.createDebugGraphic();
+    this.mapScrollY = -this.map.heightInPixels;
+    this.layer.setPosition(0, this.mapScrollY);
+
+    this.layer.setTileIndexCallback(
+      [1, 2, 3, 6, 7, 8, 11, 12, 13, 18, 21, 22, 23],
+      (sprite: any, tile: any) => ((sprite as Player).imDie = true),
+      this
+    );
 
     // Lives
     this.drawLives();
@@ -310,13 +343,45 @@ export class GameManager extends Phaser.Scene {
     this.scene.start("InitialsScene");
   }
 
-  update() {
+  playerBang() {
+    if (!this.player) return;
+
+    this.player.destroy();
+
+    // Update lives
+    this.lives -= 1;
+    if (this.lives >= 0) {
+      let life = this.livesImages.pop();
+      if (life) {
+        life.destroy();
+      }
+      // respawn player
+      setTimeout(() => {
+        this.player = new Player(this, 640, this.game.canvas.height - 55);
+      }, 1000);
+    } else {
+      // game over
+      this.gameOver();
+    }
+
+    // create explosion
+    new Explosion(this, this.player.x, this.player.y);
+    this.player = undefined;
+  }
+
+  update(time: number, delta: number) {
     if (this.isGameOver) {
       this.gameStatus.score = this.score;
 
       // If score is in top 5 go here, condition not implemented.
       if (!this.transferring) {
         this.initialsScene();
+      } else if (!this.transferringHighScore) {
+        this.transferringHighScore = true;
+        this.highscoresTimeout = setTimeout(
+          () => this.scene.start("HighScores"),
+          10000
+        );
       }
 
       if (this.startKey?.isDown && !this.startPressed) {
@@ -349,13 +414,29 @@ export class GameManager extends Phaser.Scene {
       return;
     }
 
+    // scroll camera
+    if (this.layer) {
+      this.layer.setPosition(0, this.mapScrollY);
+      this.mapScrollY += delta * 0.1;
+    }
+
+    // debug collisions
+    // if (this.debugGraphics && this.map) {
+    //   this.debugGraphics.clear();
+    //   this.map.renderDebug(this.debugGraphics, {
+    //     tileColor: null, // Non-colliding tiles
+    //     collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles
+    //     faceColor: new Phaser.Display.Color(40, 39, 37, 255), // Colliding face edges
+    //   });
+    // }
+
     // spawn mothership
     if (Math.random() * 1000 < 1 && !this.mothership && this.wave > 10) {
       // spawn mothership
       this.mothership = new Mothership(this, -100, 70);
     }
 
-    if (!this.player?.invincible)
+    if (!this.player?.invincible) {
       this.children.list
         .filter((value) => value.name == "enemyBullet" || value.name == "enemy")
         .forEach((enemyBullet) => {
@@ -367,33 +448,14 @@ export class GameManager extends Phaser.Scene {
             )
           ) {
             enemyBullet.destroy();
-            this.player.destroy();
-
-            // Update lives
-            this.lives -= 1;
-            if (this.lives >= 0) {
-              let life = this.livesImages.pop();
-              if (life) {
-                life.destroy();
-              }
-              // respawn player
-              setTimeout(() => {
-                this.player = new Player(
-                  this,
-                  640,
-                  this.game.canvas.height - 55
-                );
-              }, 1000);
-            } else {
-              // game over
-              this.gameOver();
-            }
-
-            // create explosion
-            new Explosion(this, this.player.x, this.player.y);
-            this.player = undefined;
+            this.playerBang();
           }
         });
+      // player reports it collided.
+      if (this.player) {
+        if (this.player.imDie) this.playerBang();
+      }
+    }
 
     this.children.list
       .filter((value) => value.name == "bullet")

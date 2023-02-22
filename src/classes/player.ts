@@ -2,7 +2,7 @@ import * as Phaser from "phaser";
 import { Bullet } from "./bullet";
 import { GameManager } from "../gamemanager";
 
-export class Player extends Phaser.GameObjects.Sprite {
+export class Player extends Phaser.Physics.Arcade.Sprite {
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private fireKey: Phaser.Input.Keyboard.Key;
   private bulletSound: Phaser.Sound.BaseSound;
@@ -10,6 +10,7 @@ export class Player extends Phaser.GameObjects.Sprite {
   public invincible: boolean = true;
   private invincibilityCounter: number = 2000;
   private intervalId: number | undefined;
+  public imDie: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, "player");
@@ -17,18 +18,37 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.bulletSound = this.scene.game.sound.add("bullet-fired");
     this.scale = 0.2;
     this.name = "player";
+
     this.scene.add.existing(this);
+    this.scene.physics.add.existing(this);
+    this.setBodySize(this.width - 200, this.height - 220, true);
+
+    let cl = (this.scene as GameManager).layer;
+    if (cl)
+      this.scene.physics.add.collider(
+        this,
+        cl,
+        (ob1, ob2) => (this.imDie = true)
+      );
+
     this.cursors = this.scene.input.keyboard.createCursorKeys();
     this.fireKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
   }
 
+  create() {}
+
   preUpdate(time: number, delta: number) {
+    const velocity = 500 * delta * 0.06;
+    const { left, right, up, down } = this.cursors;
+
     if (this.invincible) {
+      this.body.checkCollision.none = true;
       this.invincibilityCounter -= delta;
       if (this.invincibilityCounter <= 0) {
         this.invincible = false;
+        this.body.checkCollision.none = false;
         clearInterval(this.intervalId);
         this.setVisible(true);
       } else if (!this.intervalId) {
@@ -38,28 +58,42 @@ export class Player extends Phaser.GameObjects.Sprite {
       }
     }
 
-    // Move the player left or right based on user input
-    if (this.cursors.left.isDown) {
-      this.x = Math.max(
-        0 + this.getBounds().width / 2,
-        this.x - 50 * (delta * 0.01)
-      );
-    } else if (this.cursors.right.isDown) {
-      this.x = Math.min(
-        this.scene.game.canvas.width - this.getBounds().width / 2,
-        this.x + 50 * (delta * 0.01)
-      );
+    // Horizontal movement
+    if (left.isDown) {
+      this.setVelocityX(-velocity);
+    } else if (right.isDown) {
+      this.setVelocityX(velocity);
+    } else {
+      // this.setVelocityX(Math.random() * 20 - 10);
+      this.setVelocityX(0);
     }
-    if (this.cursors.up.isDown) {
-      this.y = Math.max(
-        0 + this.getBounds().height / 2,
-        this.y - 50 * (delta * 0.01)
-      );
-    } else if (this.cursors.down.isDown) {
-      this.y = Math.min(
-        this.scene.game.canvas.height - this.getBounds().height / 2,
-        this.y + 50 * (delta * 0.01)
-      );
+
+    // Vertical movement
+    if (up.isDown) {
+      this.setVelocityY(-velocity);
+    } else if (down.isDown) {
+      this.setVelocityY(velocity);
+    } else {
+      // this.setVelocityY(Math.random() * 20 - 10);
+      this.setVelocityY(0);
+    }
+
+    // Boundary detection
+    const halfWidth = this.getBounds().width / 2;
+    const halfHeight = this.getBounds().height / 2;
+    const canvasWidth = this.scene.game.canvas.width;
+    const canvasHeight = this.scene.game.canvas.height;
+
+    if (this.x < halfWidth) {
+      this.setX(halfWidth);
+    } else if (this.x > canvasWidth - halfWidth) {
+      this.setX(canvasWidth - halfWidth);
+    }
+
+    if (this.y < halfHeight) {
+      this.setY(halfHeight);
+    } else if (this.y > canvasHeight - halfHeight) {
+      this.setY(canvasHeight - halfHeight);
     }
 
     // Fire a bullet if the fire button is pressed
