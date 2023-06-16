@@ -9,4 +9,4 @@ It is a game written in typescript that can run in the browser.
 
 Web Link:
 
-[shootemup.pro](http://shootemup.pro)
+[shootemup.pro](http://shootemup.pro) - sometimes has a bug with input in Chrome, not sure why.
